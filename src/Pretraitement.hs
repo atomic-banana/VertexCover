@@ -4,8 +4,9 @@ module Pretraitement (
 import qualified Graph as G
 
 findFirstDegreeVertex :: G.G -> [Int]
-findFirstDegreeVertex g = [howManyEdgeFor x | x <- [1..G.getNVertices g]]
+findFirstDegreeVertex g = [i | (i,x)<- zip [1..] countAllN, x == 1]
   where
+    countAllN = [howManyEdgeFor x | x <- [1..G.getNVertices g]]
     howManyEdgeFor n = sum [1 | (x, y) <- G.getEdges g, isEqualToOneOfThem x y, isNotTheOnlyVertex x y]
       where
         isEqualToOneOfThem x y = x == n || y == n
