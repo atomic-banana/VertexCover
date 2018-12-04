@@ -1,12 +1,13 @@
 module Graph (
     G(..)
     , parseG
+    , emptyG
+    , select
 ) where
 
 import qualified Data.Foldable      as F
 import qualified Data.List          as L
 import qualified Data.Tuple         as T
--- import qualified System.IO          as IO
 
 -- |A graph type
 data G = G { getNVertices :: Int          -- the number of vertices
@@ -52,3 +53,11 @@ parseG = go emptyG . L.map L.words . L.filter (not . L.isPrefixOf "c")
       | i < j                  = go (g { getEdges = (stringToInt i, stringToInt j) : getEdges g  }) ls
       | otherwise              = go (g { getEdges = (stringToInt j, stringToInt i) : getEdges g  }) ls
     go _ _                     = Nothing
+
+-- |'select' 'v' select a vertices to put to the solution.
+-- return a new graph without the selected vertices.
+select :: G -> Int -> G
+select (G 0 _ _)    v = error "Cannot use an empty graph"
+select g            v = G (getNVertices g - 1) (length edges) edges
+    where 
+        edges = filter (\x -> fst x /= v && snd x /= v) (getEdges g)
