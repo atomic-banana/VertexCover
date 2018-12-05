@@ -1,5 +1,6 @@
 module Pretraitement (
-  findFirstDegreeVertex
+  findFirstDegreeVertex,
+  findLoopedFirstDegreeVertex
 ) where
 import qualified Graph as G
 
@@ -11,6 +12,13 @@ findFirstDegreeVertex g = [i | (i,x)<- zip [1..] countAllN, x == 1]
       where
         isEqualToOneOfThem x y = x == n || y == n
         isNotTheOnlyVertex x y = x /= n || y /= n
+
+
+findLoopedFirstDegreeVertex :: G.G -> [Int]
+findLoopedFirstDegreeVertex g = [i | i <- [1.. G.getNVertices g], isLooped i]
+  where
+    isLooped n = any (==True) [isEqualToBothOfThem n x y |  (x, y) <- G.getEdges g]
+    isEqualToBothOfThem n x y = x == n && y == n
 
 
 
