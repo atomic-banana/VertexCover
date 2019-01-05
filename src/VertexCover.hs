@@ -1,17 +1,35 @@
 module VertexCover (
     VC(..)
     , select
+    , writeVCTo
 ) where
 
-import qualified Graph as G
+import qualified Data.List  as L
+import qualified Graph      as G
 
 -- |A vertex cover solution
 data VC = VC { getVertices :: [Int] } deriving (Show)
+
+-- | show instance
+-- instance (Show a) => Show (VC a) where
+--   show = show . getVertices
+
+-- |'writeVCTo' 'graph' 'vc' 'file path'
+-- Write the given solution into the file.
+writeVCTo :: G.G -> VC -> String -> IO()
+-- writeVCTo graph vc path = writeFile path ( infos ++ (L.intercalate "\n" . map show . getVertices vc))
+writeVCTo graph vc path = writeFile path all
+  where
+    vertices = getVertices vc
+    infos = "s vc " ++ show ( G.getNVertices graph ) ++ ' ' : show (length vertices) ++ "\n"
+    strs = map show vertices
+    str = L.intercalate "\n" strs
+    all = infos ++ str
 
 -- |'select' 'v' select a vertices to put to the solution.
 -- return a new graph without the selected vertices.
 select :: G.G -> Int -> G.G
 select (G.G 0 _ _)  v = error "Cannot use an empty graph"
 select g            v = G.G (G.getNVertices g - 1) (length edges) edges
-    where 
-        edges = filter (\x -> fst x /= v && snd x /= v) (G.getEdges g)
+  where
+    edges = filter (\x -> fst x /= v && snd x /= v) (G.getEdges g)

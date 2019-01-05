@@ -10,10 +10,14 @@ main :: IO ()
 main = do
     args    <- Environment.getArgs
     content <- IO.readFile (L.head args)
-    IO.putStr . tryTo . G.parseG $ L.lines content
-    IO.putStr "\n"
+    tryToSave (G.parseG (L.lines content)) vc "test.tmp"
+  where
+    vc = V.VC [1, 2, 3]
 
-tryTo :: Maybe G.G -> String
-tryTo (Just g)      = "Correct " ++ (show $ V.select g 4)
-tryTo (Nothing)     = "Error, no graph parsed"
+tryToShow :: Maybe G.G -> String
+tryToShow (Just g) = "Correct " ++ show (V.select g 4)
+tryToShow _        = "Error, no graph parsed"
 
+tryToSave :: Maybe G.G -> V.VC -> String -> IO()
+tryToSave (Just g) vc path = V.writeVCTo g vc path
+tryToSave _ _ _       = error "Error, no graph parsed"
