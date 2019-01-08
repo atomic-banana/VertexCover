@@ -2,6 +2,7 @@ module VertexCover (
     VC(..)
     , select
     , writeVCTo
+    , putInSolution
 ) where
 
 import qualified Data.List  as L
@@ -21,7 +22,8 @@ writeVCTo :: G.G -> VC -> String -> IO()
 writeVCTo graph vc path = writeFile path all
   where
     vertices = getVertices vc
-    infos = "s vc " ++ show ( G.getNVertices graph ) ++ ' ' : show (length vertices) ++ "\n"
+    infos = "s vc " ++ show ( G.getNVertices graph ) ++ ' ' :
+      show (length vertices) ++ "\n"
     strs = map show vertices
     str = L.intercalate "\n" strs
     all = infos ++ str
@@ -33,3 +35,18 @@ select (G.G 0 _ _)  v = error "Cannot use an empty graph"
 select g            v = G.G (G.getNVertices g - 1) (length edges) edges
   where
     edges = filter (\x -> fst x /= v && snd x /= v) (G.getEdges g)
+
+putInSolution :: (G.G, VC) -> Int -> (G.G, VC)
+putInSolution x v = (select (fst x) v, VC vertices) -- return a tuple
+  where
+    vertices = v : getVertices (snd x)
+
+putOthersInSolution :: (G.G, VC) -> Int -> (G.G, VC)
+putOthersInSolution x v =
+  (go g elts, VC (elts ++ getVertices (snd x)))
+  where
+    g = fst x
+    edges = G.getEdges g
+    elts = map fst (filter (\x -> snd x == v) edges) ++
+      map snd (filter (\x -> fst x == v) edges)
+    go g (e:es) = go (select g e) es
