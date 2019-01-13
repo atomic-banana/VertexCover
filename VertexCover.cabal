@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c60eab8180f91142ce539a7e3ba3f4b638370cf9d4344bdb31f2e75f7dfa1834
+-- hash: 7b543ad224a85fbb31908aa5a80b6151b997f406feb92a463a83e631a5316cf4
 
 name:           VertexCover
 version:        0.1.0.0
@@ -29,7 +29,6 @@ library
   exposed-modules:
       Graph
       Lib
-      Parser
       Pretraitement
       VertexCover
   other-modules:

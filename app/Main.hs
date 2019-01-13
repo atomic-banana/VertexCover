@@ -7,23 +7,30 @@ import qualified Graph              as G
 import qualified VertexCover        as V
 import qualified Pretraitement      as P 
 
+
 main :: IO ()
 main = do
-    args    <- Environment.getArgs
-    content <- IO.readFile (L.head args)
-    tryToSave (G.parseG (L.lines content)) vc "test.tmp"
-  where
-    vc = V.VC [1, 2, 3]
+  args    <- Environment.getArgs
+  content <- IO.readFile (L.head args)
+  IO.putStr . show $ graph content
+  IO.putStr "\n" 
+  printresult $ graph content
+    where 
+      graph content = G.parseG $ L.lines content 
+     -- graph = G.G { G.getNVertices = 7, G.getNEdges = 7, G.getEdges = [(6,2),(1,2),(3,2),(7,3),(1,5),(1,4),(4,3)] } 
+      
 
-tryToShow :: Maybe G.G -> String
-tryToShow (Just g) = "Correct " ++ show (V.select g 4)
-tryToShow _        = "Error, no graph parsed"
+printresult :: Maybe G.G -> IO ()
+printresult (Just g) = gocheckG g
+  where 
+    gocheckG g
+      | G.checkG g = print $ P.findFirstDegreeVertex g
+      | otherwise  = printresult_error
+printresult _        = printresult_error
 
-tryToSave :: Maybe G.G -> V.VC -> String -> IO()
-tryToSave (Just g) vc path = V.writeVCTo g vc path
-tryToSave _ _ _       = error "Error, no graph parsed"
 
-
+printresult_error :: IO ()
+printresult_error = print $ "ERROR, graph isn't valid"
 {-
   printresult
   where 
@@ -41,6 +48,18 @@ tryToSave _ _ _       = error "Error, no graph parsed"
 
 {-
 
+
+    tryToSave (G.parseG (L.lines content)) vc "test.tmp"
+  where
+    vc = V.VC [1, 2, 3]
+
+tryToShow :: Maybe G.G -> String
+tryToShow (Just g) = "Correct " ++ show (V.select g 4)
+tryToShow _        = "Error, no graph parsed"
+
+tryToSave :: Maybe G.G -> V.VC -> String -> IO()
+tryToSave (Just g) vc path = V.writeVCTo g vc path
+tryToSave _ _ _       = error "Error, no graph parsed"
 
 -}
 

@@ -26,8 +26,9 @@ emptyG = G { getNVertices = 0, getNEdges = 0, getEdges = [] }
 --   3) the graph does not contain duplicated edges
 --   4) the graph does not contain self loops
 checkG :: G -> Bool
-checkG g = checkNVerticesMax g && checkNVerticesMin g && checkNEdges g && checkDuplicate g && checkEdges g
+checkG g = checkNVertices g && checkNEdges g && checkDuplicate g && checkEdges g
   where
+    checkNVertices g = checkNVerticesMax g && checkNVerticesMin g
     checkNVerticesMax g = getNVertices g == F.maximum (L.map (uncurry max) $ getEdges g)
     checkNVerticesMin g = 1 == F.minimum (L.map (uncurry min) $ getEdges g)
     checkNEdges    g = getNEdges g == L.length (getEdges g)
