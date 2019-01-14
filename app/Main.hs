@@ -14,23 +14,25 @@ main = do
   content <- IO.readFile (L.head args)
   IO.putStr . show $ graph content
   IO.putStr "\n" 
-  printresult $ graph content
+  printresult P.findFirstDegreeVertex $ graph content 
     where 
       graph content = G.parseG $ L.lines content 
      -- graph = G.G { G.getNVertices = 7, G.getNEdges = 7, G.getEdges = [(6,2),(1,2),(3,2),(7,3),(1,5),(1,4),(4,3)] } 
       
 
-printresult :: Maybe G.G -> IO ()
-printresult (Just g) = gocheckG g
+printresult :: (G.G -> [Int]) -> Maybe G.G -> IO ()
+printresult graphTreatment (Just g) = gocheckG g
   where 
     gocheckG g
-      | G.checkG g = print $ P.findFirstDegreeVertex g
+      | G.checkG g = print $ graphTreatment g
       | otherwise  = printresult_error
-printresult _        = printresult_error
+printresult _ _                     = printresult_error
 
 
 printresult_error :: IO ()
 printresult_error = print $ "ERROR, graph isn't valid"
+
+
 {-
   printresult
   where 
