@@ -12,13 +12,10 @@ main :: IO ()
 main = do
   args    <- Environment.getArgs
   content <- IO.readFile (L.head args)
-  IO.putStr . show $ graph content
+  let g = G.parseG $ L.lines content 
+  IO.putStr $ show g
   IO.putStr "\n" 
-  printresult P.findFirstDegreeVertex $ graph content 
-    where 
-      graph content = G.parseG $ L.lines content 
-     -- graph = G.G { G.getNVertices = 7, G.getNEdges = 7, G.getEdges = [(6,2),(1,2),(3,2),(7,3),(1,5),(1,4),(4,3)] } 
-      
+  printresult P.findFirstDegreeVertex g  
 
 printresult :: (G.G -> [Int]) -> Maybe G.G -> IO ()
 printresult graphTreatment (Just g) = gocheckG g
