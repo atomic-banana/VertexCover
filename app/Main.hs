@@ -23,7 +23,7 @@ main = do
     printVertexesToDelete (Just g)
       | G.checkG g = print $ P.findFirstDegreeVertex g
       | otherwise  = printresult_error
-
+{- 
 printresult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
 printresult findVertex putSomeInSolution (Just g) = treat
   where 
@@ -33,13 +33,13 @@ printresult findVertex putSomeInSolution (Just g) = treat
       where 
         vertexToDelete = findVertex g
 printresult _ _ _                                 = printresult_error
-
+-}
 
 printresult_error :: IO ()
 printresult_error = print $ "ERROR, graph isn't valid"
 
 
-{- 
+
 
 printresult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
 printresult findVertex putSomeInSolution (Just g) = treat
@@ -53,11 +53,11 @@ printresult findVertex putSomeInSolution (Just g) = treat
       | otherwise  = printresult_error
       where 
         vertexToDelete = findVertex g
-        recursiveTreat [toDelete : vtxsLeft] x = recursiveTreat vtxsLeft (putSomeInSolution x toDelete)
+        recursiveTreat (toDelete : vtxsLeft) x = recursiveTreat vtxsLeft (putSomeInSolution x toDelete)
         recursiveTreat [] x = x
 printresult _ _ _                                 = printresult_error
 
--}
+
 
 
 
