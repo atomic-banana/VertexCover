@@ -13,21 +13,57 @@ main = do
   args    <- Environment.getArgs
   content <- IO.readFile (L.head args)
   let g = G.parseG $ L.lines content 
+  IO.putStr "\n" 
   IO.putStr $ show g
   IO.putStr "\n" 
-  printresult P.findFirstDegreeVertex g  
-
-printresult :: (G.G -> [Int]) -> Maybe G.G -> IO ()
-printresult graphTreatment (Just g) = gocheckG g
+  printVertexesToDelete g
+  IO.putStr "\n" 
+  printresult P.findFirstDegreeVertex V.putOthersInSolution g  
   where 
-    gocheckG g
-      | G.checkG g = print $ graphTreatment g
+    printVertexesToDelete (Just g)
+      | G.checkG g = print $ P.findFirstDegreeVertex g
       | otherwise  = printresult_error
-printresult _ _                     = printresult_error
+
+printresult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
+printresult findVertex putSomeInSolution (Just g) = treat
+  where 
+    treat
+      | G.checkG g = print $ putSomeInSolution (g, V.VC{V.getVertices = []}) $ head vertexToDelete
+      | otherwise  = printresult_error
+      where 
+        vertexToDelete = findVertex g
+printresult _ _ _                                 = printresult_error
 
 
 printresult_error :: IO ()
 printresult_error = print $ "ERROR, graph isn't valid"
+
+
+{- 
+
+printresult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
+printresult findVertex putSomeInSolution (Just g) = treat
+  where 
+    treat
+      | G.checkG g = print 
+        $ recursiveTreat 
+          (tail vertexToDelete)
+            $ putSomeInSolution (g, V.VC{V.getVertices = []}) 
+              $ head vertexToDelete
+      | otherwise  = printresult_error
+      where 
+        vertexToDelete = findVertex g
+        recursiveTreat [toDelete : vtxsLeft] x = recursiveTreat vtxsLeft (putSomeInSolution x toDelete)
+        recursiveTreat [] x = x
+printresult _ _ _                                 = printresult_error
+
+-}
+
+
+
+
+
+
 
 
 {-

@@ -3,6 +3,7 @@ module VertexCover (
     , select
     , writeVCTo
     , putInSolution
+    , putOthersInSolution
 ) where
 
 import qualified Data.List  as L
@@ -50,3 +51,4 @@ putOthersInSolution x v =
     elts = map fst (filter (\x -> snd x == v) edges) ++
       map snd (filter (\x -> fst x == v) edges)
     go g (e:es) = go (select g e) es
+    go g [] = g
