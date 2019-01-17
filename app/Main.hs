@@ -18,49 +18,45 @@ main = do
   IO.putStr "\n" 
   printVertexesToDelete g
   IO.putStr "\n" 
-  printresult P.findFirstDegreeVertex V.putOthersInSolution g  
+  printResult P.findFirstDegreeVertex V.putOthersInSolution g  
   where 
     printVertexesToDelete (Just g)
       | G.checkG g = print $ P.findFirstDegreeVertex g
-      | otherwise  = printresult_error
+      | otherwise  = printResultError
 {- 
-printresult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
-printresult findVertex putSomeInSolution (Just g) = treat
+printResult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
+printResult findVertex putSomeInSolution (Just g) = treat
   where 
     treat
       | G.checkG g = print $ putSomeInSolution (g, V.VC{V.getVertices = []}) $ head vertexToDelete
-      | otherwise  = printresult_error
+      | otherwise  = printResultError
       where 
         vertexToDelete = findVertex g
-printresult _ _ _                                 = printresult_error
+printResult _ _ _                                 = printResultError
 -}
 
-printresult_error :: IO ()
-printresult_error = print $ "ERROR, graph isn't valid"
+printResultError :: IO ()
+printResultError = print $ "ERROR, graph isn't valid"
 
 
 
 
-printresult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
-printresult findVertex putSomeInSolution (Just g) = treat
+printResult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
+printResult findVertex putSomeInSolution (Just g) = treat
   where 
     treat
-      | G.checkG g = print 
-        $ recursiveTreat 
-          (tail vertexToDelete)
-            $ putSomeInSolution (g, V.VC{V.getVertices = []}) 
-              $ head vertexToDelete
-      | otherwise  = printresult_error
+      | G.checkG g = print $ doOneBranch vertexToDelete putSomeInSolution (g, V.VC{V.getVertices = []}) 
+      | otherwise  = printResultError
       where 
         vertexToDelete = findVertex g
-        recursiveTreat (toDelete : vtxsLeft) x = recursiveTreat vtxsLeft (putSomeInSolution x toDelete)
-        recursiveTreat [] x = x
-printresult _ _ _                                 = printresult_error
+printResult _ _ _                                 = printResultError
 
 
 
 
-
+doOneBranch :: [Int] -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> (G.G, V.VC) -> (G.G, V.VC)
+doOneBranch (toDelete:vtxsLeft) putSomeInSolution x = doOneBranch vtxsLeft putSomeInSolution (putSomeInSolution x toDelete) 
+doOneBranch [] _ x = x
 
 
 
