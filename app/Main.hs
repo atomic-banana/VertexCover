@@ -51,6 +51,8 @@ printResult findVertex putSomeInSolution (Just g)
 printResult _ _ _                                 = printResultError
 
 
+
+doPreTreat x = doPreTreatFDV $ doPreTreatLFDV x
 doPreTreatLFDV x = doOneBranchPreTreat (P.findFirstDegreeVertex $ fst x) V.putInSolution x
 doPreTreatFDV x = doOneBranchPreTreat (P.findFirstDegreeVertex $ fst x) V.putOthersInSolution x
 
