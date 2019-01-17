@@ -42,22 +42,25 @@ printResultError = print $ "ERROR, graph isn't valid"
 
 
 printResult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
-printResult findVertex putSomeInSolution (Just g) = treat
-  where 
-    treat
-      | G.checkG g = print $ doOneBranch vertexToDelete putSomeInSolution (g, V.VC{V.getVertices = []}) 
-      | otherwise  = printResultError
-      where 
-        vertexToDelete = findVertex g
+printResult findVertex putSomeInSolution (Just g) 
+  | G.checkG g = print $ doTree 
+  | otherwise  = printResultError
+    where
+      doTree = doPreTreat
+      doPreTreat = doOneBranchPreTreat (findVertex g) putSomeInSolution (g, V.VC{V.getVertices = []}) 
 printResult _ _ _                                 = printResultError
 
 
+doPreTreatLFDV x = doOneBranchPreTreat (P.findFirstDegreeVertex $ fst x) V.putInSolution x
+doPreTreatFDV x = doOneBranchPreTreat (P.findFirstDegreeVertex $ fst x) V.putOthersInSolution x
+
+doOneBranchPreTreat :: [Int] -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> (G.G, V.VC) -> (G.G, V.VC)
+doOneBranchPreTreat (toDelete:vtxsLeft) putSomeInSolution x = doOneBranchPreTreat vtxsLeft putSomeInSolution $ putSomeInSolution x toDelete
+doOneBranchPreTreat [] _ x = x
 
 
-doOneBranch :: [Int] -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> (G.G, V.VC) -> (G.G, V.VC)
-doOneBranch (toDelete:vtxsLeft) putSomeInSolution x = doOneBranch vtxsLeft putSomeInSolution (putSomeInSolution x toDelete) 
-doOneBranch [] _ x = x
-
+doOneBranch :: Int -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> (G.G, V.VC) -> (G.G, V.VC)
+doOneBranch toDelete putSomeInSolution x = putSomeInSolution x toDelete
 
 
 
