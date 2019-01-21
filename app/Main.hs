@@ -6,7 +6,7 @@ import qualified System.IO          as IO
 import qualified Graph              as G
 import qualified VertexCover        as V
 import qualified Pretraitement      as P 
-
+import qualified Data.Foldable      as F
 
 main :: IO ()
 main = do
@@ -23,6 +23,7 @@ main = do
     printVertexesToDelete (Just g)
       | G.checkG g = print $ P.findFirstDegreeVertex g
       | otherwise  = printResultError
+    printVertexesToDelete _ = printResultError
 {- 
 printResult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
 printResult findVertex putSomeInSolution (Just g) = treat
@@ -46,13 +47,31 @@ printResult findVertex putSomeInSolution (Just g)
   | G.checkG g = print $ doTree 
   | otherwise  = printResultError
     where
-      doTree = doPreTreat
-      doPreTreat = doOneBranchPreTreat (findVertex g) putSomeInSolution (g, V.VC{V.getVertices = []}) 
+      doTree = doFullTree doPreTreat
+      doPreTreat = doPreTreatFull(g, V.VC{V.getVertices = []}) 
 printResult _ _ _                                 = printResultError
 
+{-
+doFullTree :: (G.G, V.VC) -> Int--[(G.G, V.VC)]
+doFullTree (g,vc) 
+  | G.getEdges g == [] = 0
+  | otherwise = 1
+-}
+
+doFullTree :: (G.G, V.VC) -> [(G.G, V.VC)]
+doFullTree (g,vc) 
+  | G.getEdges g == [] = (g,vc):[]
+  | otherwise = (doFullBranch V.putInSolution) ++ (doFullBranch V.putOthersInSolution)
+  where 
+    vtx = F.minimum (L.map (uncurry min) $ G.getEdges g)
+    doFullBranch putSomeInSolution = doFullTree $ doOneBranch vtx putSomeInSolution (g,vc)
 
 
-doPreTreat x = doPreTreatFDV $ doPreTreatLFDV x
+
+--doOneBranchPreTreat (findVertex g) putSomeInSolution
+
+
+doPreTreatFull x = doPreTreatFDV $ doPreTreatLFDV x
 doPreTreatLFDV x = doOneBranchPreTreat (P.findFirstDegreeVertex $ fst x) V.putInSolution x
 doPreTreatFDV x = doOneBranchPreTreat (P.findFirstDegreeVertex $ fst x) V.putOthersInSolution x
 
