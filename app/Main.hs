@@ -13,12 +13,12 @@ main = do
   args    <- Environment.getArgs
   content <- IO.readFile (L.head args)
   let g = G.parseG $ L.lines content 
-  IO.putStr "\n" 
+  IO.putStr "\nPrintG\n" 
   IO.putStr $ show g
-  IO.putStr "\n" 
+  IO.putStr "\n\nprintVertexesToDelete\n" 
   printVertexesToDelete g
   IO.putStr "\n" 
-  printResult P.findFirstDegreeVertex V.putOthersInSolution g  
+  printResult g  
   where 
     printVertexesToDelete (Just g)
       | G.checkG g = print $ P.findFirstDegreeVertex g
@@ -42,14 +42,14 @@ printResultError = print $ "ERROR, graph isn't valid"
 
 
 
-printResult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
-printResult findVertex putSomeInSolution (Just g) 
+printResult :: Maybe G.G -> IO ()
+printResult (Just g) 
   | G.checkG g = print $ doTree 
   | otherwise  = printResultError
     where
       doTree = doFullTree doPreTreat
       doPreTreat = doPreTreatFull(g, V.VC{V.getVertices = []}) 
-printResult _ _ _                                 = printResultError
+printResult _                                = printResultError
 
 {-
 doFullTree :: (G.G, V.VC) -> Int--[(G.G, V.VC)]
