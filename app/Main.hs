@@ -49,7 +49,7 @@ printResult (Just g)
     where
       doTree = doFullTree doPreTreat
       doPreTreat = doPreTreatFull(g, V.VC{V.getVertices = []}) 
-printResult _                                = printResultError
+printResult _ = printResultError
 
 {-
 doFullTree :: (G.G, V.VC) -> Int--[(G.G, V.VC)]
@@ -72,11 +72,12 @@ doFullTree (g,vc)
 
 
 doPreTreatFull x = doPreTreatFDV $ doPreTreatLFDV x
-doPreTreatLFDV x = doOneBranchPreTreat (P.findFirstDegreeVertex $ fst x) V.putInSolution x
+doPreTreatLFDV x = doOneBranchPreTreat (P.findLoopedFirstDegreeVertex $ fst x) V.putInSolution x
 doPreTreatFDV x = doOneBranchPreTreat (P.findFirstDegreeVertex $ fst x) V.putOthersInSolution x
 
 doOneBranchPreTreat :: [Int] -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> (G.G, V.VC) -> (G.G, V.VC)
 doOneBranchPreTreat (toDelete:vtxsLeft) putSomeInSolution x = doOneBranchPreTreat vtxsLeft putSomeInSolution $ putSomeInSolution x toDelete
+doOneBranchPreTreat (toDelete:[]) putSomeInSolution x = doOneBranchPreTreat [] putSomeInSolution $ putSomeInSolution x toDelete
 doOneBranchPreTreat [] _ x = x
 
 
