@@ -5,33 +5,51 @@ import qualified System.Environment as Environment
 import qualified System.IO          as IO
 import qualified Graph              as G
 import qualified VertexCover        as V
-import qualified Pretraitement      as P 
+import qualified Pretraitement      as P
 import qualified Data.Foldable      as F
 
 main :: IO ()
 main = do
   args    <- Environment.getArgs
-  content <- IO.readFile (L.head args)
-  let g = G.parseG $ L.lines content 
-  IO.putStr "\nPrintG\n" 
-  IO.putStr $ show g
-  IO.putStr "\n\nprintVertexesToDelete\n" 
-  printVertexesToDelete g
-  IO.putStr "\n" 
-  printResult g  
-  where 
-    printVertexesToDelete (Just g)
-      | G.checkG g = print $ P.findFirstDegreeVertex g
-      | otherwise  = printResultError
-    printVertexesToDelete _ = printResultError
-{- 
+  content <- IO.readFile $ L.head args -- first argument -> input path file
+  let maybeG = G.parseG $ L.lines content
+  let output = args !! 1 -- second argument -> output path file
+  IO.putStr "\nComputing...\n"
+  continue maybeG output
+  where
+    continue :: Maybe G.G -> String -> IO()
+    continue (Just g) = V.writeVCTo g V.VC { V.getVertices = [1, 2, 3, 4, 5] }
+    continue _ = error "File format not correct, cannot parse the graph"
+    -- ( doFullTree (doPreTreatFull (g, V.emptyVertexCover)) )
+
+
+-- Old main
+-- main :: IO ()
+-- main = do
+--   args    <- Environment.getArgs
+--   content <- IO.readFile (L.head args)
+--   let g = G.parseG $ L.lines content
+--   IO.putStr "\nPrintG\n"
+--   IO.putStr $ show g
+--   IO.putStr "\n\nprintVertexesToDelete\n"
+--   printVertexesToDelete g
+--   IO.putStr "\n"
+--   V.writeVCTo g ( doFullTree doPreTreatFull (g, V.VC{V.getVertices = []}) ) "test.vc"
+--   printResult g
+--   where
+--     printVertexesToDelete (Just g)
+--       | G.checkG g = print $ P.findOneDegreeVertex g
+--       | otherwise  = printResultError
+--     printVertexesToDelete _ = printResultError
+
+{-
 printResult :: (G.G -> [Int]) -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> Maybe G.G -> IO ()
 printResult findVertex putSomeInSolution (Just g) = treat
-  where 
+  where
     treat
       | G.checkG g = print $ putSomeInSolution (g, V.VC{V.getVertices = []}) $ head vertexToDelete
       | otherwise  = printResultError
-      where 
+      where
         vertexToDelete = findVertex g
 printResult _ _ _                                 = printResultError
 -}
@@ -43,26 +61,26 @@ printResultError = print $ "ERROR, graph isn't valid"
 
 
 printResult :: Maybe G.G -> IO ()
-printResult (Just g) 
-  | G.checkG g = print $ doTree 
+printResult (Just g)
+  | G.checkG g = print $ doTree
   | otherwise  = printResultError
     where
       doTree = doFullTree doPreTreat
-      doPreTreat = doPreTreatFull(g, V.VC{V.getVertices = []}) 
+      doPreTreat = doPreTreatFull(g, V.VC{V.getVertices = []})
 printResult _ = printResultError
 
 {-
 doFullTree :: (G.G, V.VC) -> Int--[(G.G, V.VC)]
-doFullTree (g,vc) 
+doFullTree (g,vc)
   | G.getEdges g == [] = 0
   | otherwise = 1
 -}
 
 doFullTree :: (G.G, V.VC) -> [(G.G, V.VC)]
-doFullTree (g,vc) 
+doFullTree (g,vc)
   | G.getEdges g == [] = (g,vc):[]
   | otherwise = (doFullBranch V.putInSolution) ++ (doFullBranch V.putOthersInSolution)
-  where 
+  where
     vtx = F.minimum (L.map (uncurry min) $ G.getEdges g)
     doFullBranch putSomeInSolution = doFullTree $ doOneBranch vtx putSomeInSolution (g,vc)
 
@@ -73,13 +91,12 @@ doFullTree (g,vc)
 
 doPreTreatFull x = doPreTreatFDV $ doPreTreatLFDV x
 doPreTreatLFDV x = doOneBranchPreTreat (P.findLoopedFirstDegreeVertex $ fst x) V.putInSolution x
-doPreTreatFDV x = doOneBranchPreTreat (P.findFirstDegreeVertex $ fst x) V.putOthersInSolution x
+doPreTreatFDV x = doOneBranchPreTreat (P.findOneDegreeVertex $ fst x) V.putOthersInSolution x
 
 doOneBranchPreTreat :: [Int] -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> (G.G, V.VC) -> (G.G, V.VC)
 doOneBranchPreTreat (toDelete:vtxsLeft) putSomeInSolution x = doOneBranchPreTreat vtxsLeft putSomeInSolution $ putSomeInSolution x toDelete
 doOneBranchPreTreat (toDelete:[]) putSomeInSolution x = doOneBranchPreTreat [] putSomeInSolution $ putSomeInSolution x toDelete
 doOneBranchPreTreat [] _ x = x
-
 
 doOneBranch :: Int -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> (G.G, V.VC) -> (G.G, V.VC)
 doOneBranch toDelete putSomeInSolution x = putSomeInSolution x toDelete
@@ -89,17 +106,17 @@ doOneBranch toDelete putSomeInSolution x = putSomeInSolution x toDelete
 
 {-
   printresult
-  where 
-    graph = G.G { G.getNVertices = 7, G.getNEdges = 7, G.getEdges = [(6,2),(1,2),(3,2),(7,3),(1,5),(1,4),(4,3)] } 
-    printresult 
+  where
+    graph = G.G { G.getNVertices = 7, G.getNEdges = 7, G.getEdges = [(6,2),(1,2),(3,2),(7,3),(1,5),(1,4),(4,3)] }
+    printresult
       | G.checkG graph = print $ P.findFirstDegreeVertex graph
       | otherwise    = print $ "ERROR, graph isn't valid"
- 
-  -- do 
-  -- args    <- Environment.getArgs 
-  -- content <- IO.readFile (L.head args) 
-  -- IO.putStr . show . G.parseG $ L.lines content 
-  -- IO.putStr "\n" 
+
+  -- do
+  -- args    <- Environment.getArgs
+  -- content <- IO.readFile (L.head args)
+  -- IO.putStr . show . G.parseG $ L.lines content
+  -- IO.putStr "\n"
  -}
 
 {-
@@ -121,10 +138,10 @@ tryToSave _ _ _       = error "Error, no graph parsed"
 
 
 {-
-  print $ P.findLoopedFirstDegreeVertex G.G { G.getNVertices = 7, G.getNEdges = 7, G.getEdges = [(6,6),(1,2),(3,2),(7,3),(1,5),(1,4),(4,3)] } 
+  print $ P.findLoopedFirstDegreeVertex G.G { G.getNVertices = 7, G.getNEdges = 7, G.getEdges = [(6,6),(1,2),(3,2),(7,3),(1,5),(1,4),(4,3)] }
   result awaited : [6]
 -}
 {-
-  print $ P.findFirstDegreeVertex G.G { G.getNVertices = 7, G.getNEdges = 7, G.getEdges = [(6,2),(1,2),(3,2),(7,3),(1,5),(1,4),(4,3)] } 
+  print $ P.findFirstDegreeVertex G.G { G.getNVertices = 7, G.getNEdges = 7, G.getEdges = [(6,2),(1,2),(3,2),(7,3),(1,5),(1,4),(4,3)] }
   result awaited : [5,6,7]
 -}
