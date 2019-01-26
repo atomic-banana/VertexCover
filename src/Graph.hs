@@ -1,5 +1,7 @@
 module Graph (
     G(..)
+    , Node
+    , Edge
     , parseG
     , emptyG
     , checkG
@@ -9,10 +11,16 @@ import qualified Data.Foldable      as F
 import qualified Data.List          as L
 import qualified Data.Tuple         as T
 
+-- |A node type is an Int
+type Node = Int
+
+-- |An edge is a tuple of Int
+type Edge = (Node, Node)
+
 -- |A graph type
 data G = G { getNVertices :: Int          -- the number of vertices
            , getNEdges    :: Int          -- the number of edges
-           , getEdges     :: [(Int, Int)] -- the edges 
+           , getEdges     :: [Edge] -- the edges
            } deriving (Show)
 
 -- |'emptyG' return an empty graph
