@@ -12,14 +12,9 @@ import qualified Graph      as G
 -- |A vertex cover solution
 data VC = VC { getVertices :: [Int] } deriving (Show)
 
--- | show instance
--- instance (Show a) => Show (VC a) where
---   show = show . getVertices
-
 -- |'writeVCTo' 'graph' 'vc' 'file path'
 -- Write the given solution into the file.
 writeVCTo :: G.G -> VC -> String -> IO()
--- writeVCTo graph vc path = writeFile path ( infos ++ (L.intercalate "\n" . map show . getVertices vc))
 writeVCTo graph vc path = writeFile path all
   where
     vertices = getVertices vc
@@ -44,7 +39,7 @@ putInSolution x v = (select (fst x) v, VC vertices) -- return a tuple
 
 putOthersInSolution :: (G.G, VC) -> Int -> (G.G, VC)
 putOthersInSolution x v =
-  (go g elts, VC (elts ++ getVertices (snd x)))
+  (go g elts, VC (elts ++ getVertices (snd x))) -- return a tuple
   where
     g = fst x
     edges = G.getEdges g
