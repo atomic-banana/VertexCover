@@ -1,5 +1,6 @@
 module VertexCover (
     VC(..)
+    , emptyVertexCover
     , select
     , writeVCTo
     , putInSolution
@@ -10,19 +11,30 @@ import qualified Data.List  as L
 import qualified Graph      as G
 
 -- |A vertex cover solution
-data VC = VC { getVertices :: [Int] } deriving (Show)
+data VC = VC { getVertices :: [Int] }
+  deriving (Show)
+
+-- |'emptyG' return an empty graph
+emptyVertexCover :: VC
+emptyVertexCover = VC { getVertices = [] }
+
+-- |'toPACEFormat' 'vc'
+-- Convert all nodes into the vertex cover solution into a string
+-- which is compatible with PACE format.
+-- See https://pacechallenge.org/2019/vc/vc_format/.
+toPACEFormat :: VC -> String
+toPACEFormat vc = L.intercalate "\n" . map show $ getVertices vc
 
 -- |'writeVCTo' 'graph' 'vc' 'file path'
 -- Write the given solution into the file.
 writeVCTo :: G.G -> VC -> String -> IO()
-writeVCTo graph vc path = writeFile path all
-  where
-    vertices = getVertices vc
-    infos = "s vc " ++ show ( G.getNVertices graph ) ++ ' ' :
-      show (length vertices) ++ "\n"
-    strs = map show vertices
-    str = L.intercalate "\n" strs
-    all = infos ++ str
+writeVCTo graph vc path =
+  writeFile path $ "s vc " ++
+  show ( G.getNVertices graph ) ++
+  ' ' :
+  show ( length (getVertices vc) ) ++
+  '\n' :
+  toPACEFormat vc
 
 -- |'select' 'v' select a vertices to put to the solution.
 -- return a new graph without the selected vertices.
