@@ -5,10 +5,13 @@ module VertexCover (
     , writeVCTo
     , putInSolution
     , putOthersInSolution
+    , findAndSelectAllOneDegree
 ) where
 
 import qualified Data.List  as L
 import qualified Graph      as G
+import qualified System.IO          as IO
+import qualified Control.Exception as E
 
 -- |A vertex cover solution
 data VC = VC { getVertices :: [Int] }
@@ -36,11 +39,31 @@ writeVCTo graph vc path =
   '\n' :
   toPACEFormat vc
 
+-- |'findOneDegreeVertex' 'graph'
+-- Search each vertex which is one-degree.
+findOneDegreeVertex :: G.G -> [G.Node]
+findOneDegreeVertex g =
+  -- Create tuples that associates the index with the number of edge only
+  -- for vertices with one degree.
+  [node | node <- [1..G.getNVertices g], G.howManyEdgeFor g node == 1]
+
+-- |'findAndSelectAllOneDegree' 'instance'
+-- Find and select all one-degree vertex from the graph and add neighbor into the VertexCover.
+findAndSelectAllOneDegree :: (G.G, VC) -> (G.G, VC)
+findAndSelectAllOneDegree (g, vc) =
+  selectAllOneDegree (findOneDegreeVertex g) (g, vc)
+
+-- |'selectAllOneDegree' '[nodes]' 'instance'
+-- Select all one-degree vertex and add their neighbor into the solution
+selectAllOneDegree :: [G.Node] -> (G.G, VC) -> (G.G, VC)
+selectAllOneDegree (x:xs) result = selectAllOneDegree xs $ putOthersInSolution result x
+selectAllOneDegree [] result = result
+
 -- |'select' 'v' select a vertices to put to the solution.
 -- return a new graph without the selected vertices.
-select :: G.G -> G.Node -> G.G
-select (G.G 0 _ _)  v = error "Cannot use an empty graph"
-select g            v = G.G {
+select :: G.G -> G.Node -> Either String G.G
+select (G.G 0 _ _)  v = Left "Cannot use an empty graph"
+select g            v = Right G.G {
     G.getNVertices = G.getNVertices g - 1
   , G.getNEdges    = length edges
   , G.getEdges     = edges
@@ -48,37 +71,32 @@ select g            v = G.G {
   where
     edges = filter (\x -> fst x /= v && snd x /= v) $ G.getEdges g
 
--- |'filterAdjacentNode' 'edges' 'current' 'node'
--- Filter all edges and extract the node which is connected to the other node.
--- e.g : filterAdjacentNode [(1, 2), (1, 3), (4, 1), (3, 4), (5, 8)] 1
---       -> [2, 3, 4] because there is 1 -> 2, 1 -> 3 and 1 <- 4
--- Add all extracted nodes to another list.
-filterAdjacentNode :: [G.Edge] -> G.Node -> [G.Node] -> [G.Node]
-filterAdjacentNode (x:xs) node nodes
-  | fst x == node = filterAdjacentNode xs node $ snd x : nodes -- 'node' is the 'source'
-  | snd x == node = filterAdjacentNode xs node $ fst x : nodes -- 'node' is the 'destination'
-  | otherwise = filterAdjacentNode xs node nodes -- not concerned
-filterAdjacentNode [] _ nodes = nodes
-
 -- |'putInSolution' '(graph, vc instance)' 'node'
 -- Put the given node into the current vertex cover solution and
 -- deletes all edges connected to that node into the given graph instance.
 putInSolution :: (G.G, VC) -> G.Node -> (G.G, VC)
-putInSolution (g, vc) v = (select g v, VC vertices) -- return a tuple
+putInSolution (g, vc) node = case select g node of
+  Left msg -> error msg
+  Right g -> (g, VC vertices) -- return a tuple
   where
-    vertices = v : getVertices vc
+    vertices = node : getVertices vc
+
 
 -- |'putOthersInSolution' '(graph, vc instance)' 'node'
 -- Put all nodes connected to the given node the current vertex cover solution
 -- and deletes all edges connected to these nodes into the given graph instance.
 putOthersInSolution :: (G.G, VC) -> G.Node -> (G.G, VC)
 putOthersInSolution (g, vc) node =
-  (go g elts, VC elts) -- return a tuple
+  (go g elts (length elts - length (getVertices vc)), VC elts) -- return a tuple
+  -- (go g elts (length elts - length (getVertices vc)), VC elts) -- return a tuple
   where
     edges = G.getEdges g
-    elts = filterAdjacentNode edges node $ getVertices vc
-    go g (e:es) = go (select g e) es
-    go g [] = g
+    elts = G.filterAdjacentNode edges node $ getVertices vc
+    go g _ 0 =  g
+    go g [] _ = g
+    go g (e:es) cpt = case select g e of
+      Left msg -> error msg
+      Right g -> go g es $ cpt - 1
 
 -- putOthersInSolution :: (G.G, VC) -> G.Node -> (G.G, VC)
 -- putOthersInSolution (g, vc) node =
