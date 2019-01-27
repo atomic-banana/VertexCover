@@ -7,6 +7,8 @@ import qualified Graph              as G
 import qualified VertexCover        as V
 import qualified Pretraitement      as P
 import qualified Data.Foldable      as F
+import qualified Data.Function      as Fun
+
 
 main :: IO ()
 main = do
@@ -15,12 +17,49 @@ main = do
   let maybeG = G.parseG $ L.lines content
   let output = args !! 1 -- second argument -> output path file
   IO.putStr "\nComputing...\n"
-  continue maybeG output
+  IO.putStr "\nPrintG\n"
+  IO.putStr $ show maybeG
+  tryToComputeVertexCover maybeG output
+  -- where
+  --   continue (Just g) = V.writeVCTo g vc output
+  --   result = computeVertexCover maybeG
+  --   g = fst result
+  --   vc = snd result
+  --   computeVertexCover :: Maybe G.G -> (G.G, V.VC)
+  --   computeVertexCover (Just g) = V.findAndSelectAllOneDegree (g, V.emptyVertexCover)
+
+tryToComputeVertexCover :: Maybe G.G -> String -> IO()
+tryToComputeVertexCover (Just g) output =
+  V.writeVCTo g vc output
   where
-    continue :: Maybe G.G -> String -> IO()
-    continue (Just g) = V.writeVCTo g V.VC { V.getVertices = [1, 2, 3, 4, 5] }
-    continue _ = error "File format not correct, cannot parse the graph"
-    -- ( doFullTree (doPreTreatFull (g, V.emptyVertexCover)) )
+    result = getMinimumsVertexCovers . doFullTree $ V.findAndSelectAllOneDegree (g, V.emptyVertexCover)
+    vc = snd result
+tryToComputeVertexCover _ _ = error "File format not correct, cannot parse the graph"
+
+    -- ( doFullTree (V.selectAllOneDegree (g, V.emptyVertexCover)) )
+
+
+getMinimumsVertexCovers :: [(G.G, V.VC)] -> (G.G, V.VC)
+getMinimumsVertexCovers leafs = head $ L.sortBy (compare `Fun.on` (length . V.getVertices . snd)) leafs
+
+--   [x | x <- zip [length leaf | leaf <- leafs] leafs]
+
+
+
+doFullTree :: (G.G, V.VC) -> [(G.G, V.VC)]
+doFullTree (g,vc)
+  | G.getEdges g == [] = (g,vc):[]
+  | otherwise = (doFullBranch V.putInSolution) ++ (doFullBranch V.putOthersInSolution)
+  where
+    vtx = F.minimum (L.map (uncurry min) $ G.getEdges g)
+    doFullBranch putSomeInSolution = doFullTree $ doOneBranch vtx putSomeInSolution (g,vc)
+
+
+doOneBranch :: G.Node -> ((G.G, V.VC) -> G.Node -> (G.G, V.VC)) -> (G.G, V.VC) -> (G.G, V.VC)
+doOneBranch toTreat putSomeInSolution x = putSomeInSolution x toTreat
+
+
+
 
 
 -- Old main
@@ -54,20 +93,20 @@ printResult findVertex putSomeInSolution (Just g) = treat
 printResult _ _ _                                 = printResultError
 -}
 
-printResultError :: IO ()
-printResultError = print $ "ERROR, graph isn't valid"
-
-
-
-
-printResult :: Maybe G.G -> IO ()
-printResult (Just g)
-  | G.checkG g = print $ doTree
-  | otherwise  = printResultError
-    where
-      doTree = doFullTree doPreTreat
-      doPreTreat = doPreTreatFull(g, V.VC{V.getVertices = []})
-printResult _ = printResultError
+-- printResultError :: IO ()
+-- printResultError = print $ "ERROR, graph isn't valid"
+--
+--
+--
+--
+-- printResult :: Maybe G.G -> IO ()
+-- printResult (Just g)
+--   | G.checkG g = print $ doTree
+--   | otherwise  = printResultError
+--     where
+--       doTree = doFullTree doPreTreat
+--       doPreTreat = doPreTreatFull(g, V.VC{V.getVertices = []})
+-- printResult _ = printResultError
 
 {-
 doFullTree :: (G.G, V.VC) -> Int--[(G.G, V.VC)]
@@ -76,30 +115,17 @@ doFullTree (g,vc)
   | otherwise = 1
 -}
 
-doFullTree :: (G.G, V.VC) -> [(G.G, V.VC)]
-doFullTree (g,vc)
-  | G.getEdges g == [] = (g,vc):[]
-  | otherwise = (doFullBranch V.putInSolution) ++ (doFullBranch V.putOthersInSolution)
-  where
-    vtx = F.minimum (L.map (uncurry min) $ G.getEdges g)
-    doFullBranch putSomeInSolution = doFullTree $ doOneBranch vtx putSomeInSolution (g,vc)
-
-
 
 --doOneBranchPreTreat (findVertex g) putSomeInSolution
 
 
-doPreTreatFull x = doPreTreatFDV $ doPreTreatLFDV x
-doPreTreatLFDV x = doOneBranchPreTreat (P.findLoopedFirstDegreeVertex $ fst x) V.putInSolution x
-doPreTreatFDV x = doOneBranchPreTreat (P.findOneDegreeVertex $ fst x) V.putOthersInSolution x
+-- doPreTreatFull x = doPreTreatFDV x
+-- doPreTreatFDV x = doOneBranchPreTreat (P.findOneDegreeVertex $ fst x) V.putOthersInSolution x
 
-doOneBranchPreTreat :: [Int] -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> (G.G, V.VC) -> (G.G, V.VC)
-doOneBranchPreTreat (toDelete:vtxsLeft) putSomeInSolution x = doOneBranchPreTreat vtxsLeft putSomeInSolution $ putSomeInSolution x toDelete
-doOneBranchPreTreat (toDelete:[]) putSomeInSolution x = doOneBranchPreTreat [] putSomeInSolution $ putSomeInSolution x toDelete
-doOneBranchPreTreat [] _ x = x
-
-doOneBranch :: Int -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> (G.G, V.VC) -> (G.G, V.VC)
-doOneBranch toDelete putSomeInSolution x = putSomeInSolution x toDelete
+-- doOneBranchPreTreat :: [Int] -> ((G.G, V.VC) -> Int -> (G.G, V.VC)) -> (G.G, V.VC) -> (G.G, V.VC)
+-- doOneBranchPreTreat (toDelete:vtxsLeft) putSomeInSolution x = doOneBranchPreTreat vtxsLeft putSomeInSolution $ putSomeInSolution x toDelete
+-- doOneBranchPreTreat (toDelete:[]) putSomeInSolution x = doOneBranchPreTreat [] putSomeInSolution $ putSomeInSolution x toDelete
+-- doOneBranchPreTreat [] _ x = x
 
 
 
