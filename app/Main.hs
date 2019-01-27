@@ -5,7 +5,6 @@ import qualified System.Environment as Environment
 import qualified System.IO          as IO
 import qualified Graph              as G
 import qualified VertexCover        as V
-import qualified Pretraitement      as P
 import qualified Data.Foldable      as F
 import qualified Data.Function      as Fun
 
