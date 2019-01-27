@@ -5,6 +5,8 @@ module Graph (
     , parseG
     , emptyG
     , checkG
+    , filterAdjacentNode
+    , howManyEdgeFor
 ) where
 
 import qualified Data.Foldable      as F
@@ -64,3 +66,20 @@ parseG = go emptyG . L.map L.words . L.filter (not . L.isPrefixOf "c")
       | i < j                  = go (g { getEdges = (stringToInt i, stringToInt j) : getEdges g  }) ls
       | otherwise              = go (g { getEdges = (stringToInt j, stringToInt i) : getEdges g  }) ls
     go _ _                     = Nothing
+
+-- |'filterAdjacentNode' 'edges' 'current' 'node'
+-- Filter all edges and extract the node which is connected to the other node.
+-- e.g : filterAdjacentNode [(1, 2), (1, 3), (4, 1), (3, 4), (5, 8)] 1 []
+--       -> [2, 3, 4] because there is 1 -> 2, 1 -> 3 and 1 <- 4
+-- Add all extracted nodes to another list.
+filterAdjacentNode :: [Edge] -> Node -> [Node] -> [Node]
+filterAdjacentNode (x:xs) node nodes
+  | fst x == node = filterAdjacentNode xs node $ snd x : nodes -- 'node' is the 'source'
+  | snd x == node = filterAdjacentNode xs node $ fst x : nodes -- 'node' is the 'destination'
+  | otherwise = filterAdjacentNode xs node nodes -- not concerned
+filterAdjacentNode [] _ nodes = nodes
+
+-- |'howManyEdgeFor' 'graph' 'node'
+-- Count the number of edges associates with this node.
+howManyEdgeFor :: G -> Node -> Int
+howManyEdgeFor g n = sum [1 | (x, y) <- getEdges g, x == n || y == n]
