@@ -97,16 +97,3 @@ putOthersInSolution (g, vc) node =
     go g (e:es) cpt = case select g e of
       Left msg -> error msg
       Right g -> go g es $ cpt - 1
-
--- putOthersInSolution :: (G.G, VC) -> G.Node -> (G.G, VC)
--- putOthersInSolution (g, vc) node =
---   (go g elts, VC (elts ++ getVertices vc)) -- return a tuple
---   where
---     edges = G.getEdges g
---     elts = acc map fst (filter (\(x, _) -> x == node) edges) $
---       map . snd $ filter (\(x, _) -> x == node) edges
---       where
---         acc (x:xs) elts = acc xs x:elts
---         acc [] elts = elts
---     go g (e:es) = go (select g e) es
---     go g [] = g
